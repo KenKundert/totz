@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+
+"""
+Convert Timezones
+
+Converts a date and time to another timezone.
+
+Usage:
+   mytz [options] [--] <specification>...
+
+Options:
+   -t TZ, --to TZ   Convert to specified timezone.
+
+The specification must include a date, a time, and a timezone.
+
+You can specify the date with the following formats:
+{dates}
+
+You can specify the time with the following formats:
+{times}
+
+You can specify the timezone with the following formats:
+{tz}
+
+You can specify the timezone as a negative offset in two ways. One way is to 
+place the sign after the offset to avoid the offset from being confused as an 
+option. The other way is to terminate the option processing by placing '--' 
+before the specification.
+"""
+
+import arrow
+from docopt import docopt
+from inform import fatal, display, Color, full_stop, cull, debug
+from itertools import product
+from collections import OrderedDict
+import os, sys
+
+# Define allowed formats
+date_formats = OrderedDict([
+    ('YYYY-M-D', 'ex: 1969-07-20'),
+    ('YYMMDD', 'ex: 690720'),
+    ('YY MMM D', 'ex: 69 Jul 20'),
+    ('YY MMMM D', 'ex: 69 July 20'),
+    ('YYYY MMM D', 'ex: 1969 Jul 20'),
+    ('YYYY MMMM D', 'ex: 1969 July 20'),
+    ('today', 'given literally, this represents today'),
+    ('tomorrow', 'given literally, this represents tomorrow'),
+    ('DOW', 'ex. Mon, represents the next upcoming Monday (cannot be today)'),
+])
+time_formats = OrderedDict([
+    ('hA', 'ex: 1PM or 1pm'),
+    ('h:mmA', 'ex: 1:30PM, 1:30pm'),
+    ('h:mm A', 'ex: 1:30 PM, 1:30 pm'),
+    ('h:mm:ssA', 'ex: 1:30:00PM, 1:30:00pm'),
+    ('h:mm:ss A', 'ex: 1:30:00 PM, 1:30:00 pm'),
+    ('HH:mm', 'ex: 13:00'),
+    ('HH:mm:ss', 'ex: 13:00:00'),
+])
+tz_formats = OrderedDict(cull([
+    ('ZZZ', 'ex: MST or US/Phoenix') if sys.version_info >= (3,5) else None,
+        # early versions of Arrow do not support natural timezone specifications
+    ('Z', 'ex: 0700 or 0700-'),
+    ('local', 'given literally, this represents local timezone'),
+]))
+
+# Build a dictionary that contains index of each day of week (monday = 0)
+days = [
+    'mon monday',
+    'tue tuesday',
+    'wed wednesday',
+    'thu thurs thursday',
+    'fri friday',
+    'sat saturday',
+    'sun sunday'
+]
+dow = {}
+for index, day in enumerate(days):
+    for each in day.split():
+        dow[each] = index
+
+# Read command line
+cmdline = docopt(__doc__.format(
+    dates='    ' + '\n    '.join(['%s: %s' % (f, e) for f, e in date_formats.items()]),
+    times='    ' + '\n    '.join(['%s: %s' % (f, e) for f, e in time_formats.items()]),
+    tz='    ' + '\n    '.join(['%s: %s' % (f, e) for f, e in tz_formats.items()]),
+))
+desired_tz = cmdline['--to']
+if desired_tz and len(desired_tz) == 3:
+    desired_tz = desired_tz.upper()
+
+# Preprocess given specification to handle special cases
+given = cmdline['<specification>']
+if given[0] == 'today':
+    now = arrow.now()
+    given[0] = now.format('YYYY-MM-DD')
+elif given[0] == 'tomorrow':
+    now = arrow.now()
+    tomorrow = now.shift(days=+1)
+    given[0] = tomorrow.format('YYYY-MM-DD')
+elif given[0].lower() in dow:
+    now = arrow.now()
+    current_dow = dow[now.format('ddd').lower()]
+    desired_dow = dow[given[0].lower()]
+    delta = desired_dow - current_dow
+    if delta <= 0:
+        delta += 7
+    desired = now.shift(days=delta)
+    given[0] = desired.format('YYYY-MM-DD')
+given_tz = given[-1]
+if given_tz == 'local':
+    given_tz = os.environ['TZ']
+elif len(given_tz) == 3:
+    given_tz = given_tz.upper()
+    given[-1] = given_tz
+elif given_tz[-1] in '+-':
+    given_tz = given_tz[-1] + given_tz[:-1]
+    given[-1] = given_tz
+given = ' '.join(given)
+
+# Remove non-Arrow formats
+for each in ['today', 'tomorrow', 'DOW']:
+    if each in date_formats:
+        del date_formats[each]
+for each in ['local']:
+    if each in tz_formats:
+        del tz_formats[each]
+
+# Convert given specification into an Arrow time object
+for fmts in product(date_formats.items(), time_formats.items(), tz_formats.items()):
+    fmt = ' '.join([f[0] for f in fmts])
+    try:
+        debug(given, fmt)
+        given = arrow.get(given, fmt)
+        break
+    except arrow.parser.ParserError as err:
+        pass
+else:
+    fatal('unrecognized specification.', culprit=given)
+
+# Display out the date and time that was given
+label = Color('yellow', enable=Color.isTTY(sys.stdout))
+display(
+    label('given  :'),
+    given.format('dddd D MMMM YYYY, h:mma ZZ'),
+    '(%s).' % (given_tz)
+)
+
+# Convert the timezone
+if not desired_tz:
+    desired_tz = os.environ['TZ']
+    if not desired_tz:
+        desired_tz = 'local'
+try:
+    desired = given.to(desired_tz)
+except arrow.parser.ParserError as err:
+    fatal('unrecognized timezone.', culprit=desired_tz)
+
+# Display out the desired date and time
+display(
+    label('desired:'),
+    desired.format('dddd D MMMM YYYY, h:mma ZZ'),
+    '(%s),' % desired_tz,
+    full_stop(desired.humanize())
+)
