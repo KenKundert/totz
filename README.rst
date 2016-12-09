@@ -59,7 +59,7 @@ You can specify the time with the following formats:
 
 You can specify the timezone with the following formats:
 
-|   ZZZ: ex: MST or US/Phoenix
+|   ZZZ: ex: MST or US/Central or America/Phoenix
 |   Z: ex: 0700 or 0700-
 |   local: given literally, this represents local timezone
 
@@ -84,4 +84,4 @@ Then install with::
 Requires Python3.4 or later.
 
 | Released: 2016-12-09
-| Version: 1.1.0
+| Version: 1.1.1

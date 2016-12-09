@@ -57,7 +57,7 @@ time_formats = OrderedDict([
     ('HH:mm:ss', 'ex: 13:00:00'),
 ])
 tz_formats = OrderedDict(cull([
-    ('ZZZ', 'ex: MST or US/Phoenix') if sys.version_info >= (3,5) else None,
+    ('ZZZ', 'ex: MST or US/Central or America/Phoenix') if sys.version_info >= (3,5) else None,
         # early versions of Arrow do not support natural timezone specifications
     ('Z', 'ex: 0700 or 0700-'),
     ('local', 'given literally, this represents local timezone'),
