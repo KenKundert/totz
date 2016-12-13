@@ -129,7 +129,6 @@ for each in ['local']:
 for fmts in product(date_formats.items(), time_formats.items(), tz_formats.items()):
     fmt = ' '.join([f[0] for f in fmts])
     try:
-        debug(given, fmt)
         given = arrow.get(given, fmt)
         break
     except arrow.parser.ParserError as err:

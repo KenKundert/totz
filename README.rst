@@ -37,31 +37,31 @@ The specification must include a date, a time, and a timezone.
 
 You can specify the date with the following formats:
 
-|   YYYY-M-D: ex: 1969-07-20
-|   YYMMDD: ex: 690720
-|   YY MMM D: ex: 69 Jul 20
-|   YY MMMM D: ex: 69 July 20
-|   YYYY MMM D: ex: 1969 Jul 20
-|   YYYY MMMM D: ex: 1969 July 20
-|   today: given literally, this represents today
-|   tomorrow: given literally, this represents tomorrow
-|   DOW: ex. Mon, represents the next upcoming Monday (cannot be today)
+|   YYYY-M-D, ex. 1969-07-20
+|   YYMMDD, ex. 690720
+|   YY MMM D, ex. 69 Jul 20
+|   YY MMMM D, ex. 69 July 20
+|   YYYY MMM D, ex. 1969 Jul 20
+|   YYYY MMMM D, ex. 1969 July 20
+|   today, given literally, this represents today
+|   tomorrow, given literally, this represents tomorrow
+|   DOW, ex. Mon, represents the next upcoming Monday (cannot be today)
 
 You can specify the time with the following formats:
 
-|   hA: ex: 1PM or 1pm
-|   h:mmA: ex: 1:30PM, 1:30pm
-|   h:mm A: ex: 1:30 PM, 1:30 pm
-|   h:mm:ssA: ex: 1:30:00PM, 1:30:00pm
-|   h:mm:ss A: ex: 1:30:00 PM, 1:30:00 pm
-|   HH:mm: ex: 13:00
-|   HH:mm:ss: ex: 13:00:00
+|   hA, ex. 1PM or 1pm
+|   h:mmA, ex. 1:30PM, 1:30pm
+|   h:mm A, ex. 1:30 PM, 1:30 pm
+|   h:mm:ssA, ex. 1:30:00PM, 1:30:00pm
+|   h:mm:ss A, ex. 1:30:00 PM, 1:30:00 pm
+|   HH:mm, ex. 13:00
+|   HH:mm:ss, ex. 13:00:00
 
 You can specify the timezone with the following formats:
 
-|   ZZZ: ex: MST or US/Central or America/Phoenix
-|   Z: ex: 0700 or 0700-
-|   local: given literally, this represents local timezone
+|   ZZZ, ex. MST or US/Central or America/Phoenix
+|   Z, ex. 0700 or 0700-
+|   local, given literally, this represents local timezone
 
 You can specify the timezone as a negative offset in two ways. One way is to 
 place the sign after the offset to avoid the offset from being confused as an 
@@ -84,4 +84,4 @@ Then install with::
 Requires Python3.4 or later.
 
 | Released: 2016-12-13
-| Version: 1.1.2
+| Version: 1.1.3
