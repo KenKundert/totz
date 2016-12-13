@@ -83,5 +83,5 @@ Then install with::
 
 Requires Python3.4 or later.
 
-| Released: 2016-12-09
-| Version: 1.1.1
+| Released: 2016-12-13
+| Version: 1.1.2

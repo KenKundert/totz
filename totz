@@ -37,29 +37,29 @@ import os, sys
 
 # Define allowed formats
 date_formats = OrderedDict([
-    ('YYYY-M-D', 'ex: 1969-07-20'),
-    ('YYMMDD', 'ex: 690720'),
-    ('YY MMM D', 'ex: 69 Jul 20'),
-    ('YY MMMM D', 'ex: 69 July 20'),
-    ('YYYY MMM D', 'ex: 1969 Jul 20'),
-    ('YYYY MMMM D', 'ex: 1969 July 20'),
+    ('YYYY-M-D', 'ex. 1969-07-20'),
+    ('YYMMDD', 'ex. 690720'),
+    ('YY MMM D', 'ex. 69 Jul 20'),
+    ('YY MMMM D', 'ex. 69 July 20'),
+    ('YYYY MMM D', 'ex. 1969 Jul 20'),
+    ('YYYY MMMM D', 'ex. 1969 July 20'),
     ('today', 'given literally, this represents today'),
     ('tomorrow', 'given literally, this represents tomorrow'),
     ('DOW', 'ex. Mon, represents the next upcoming Monday (cannot be today)'),
 ])
 time_formats = OrderedDict([
-    ('hA', 'ex: 1PM or 1pm'),
-    ('h:mmA', 'ex: 1:30PM, 1:30pm'),
-    ('h:mm A', 'ex: 1:30 PM, 1:30 pm'),
-    ('h:mm:ssA', 'ex: 1:30:00PM, 1:30:00pm'),
-    ('h:mm:ss A', 'ex: 1:30:00 PM, 1:30:00 pm'),
-    ('HH:mm', 'ex: 13:00'),
-    ('HH:mm:ss', 'ex: 13:00:00'),
+    ('hA', 'ex. 1PM or 1pm'),
+    ('h:mmA', 'ex. 1:30PM, 1:30pm'),
+    ('h:mm A', 'ex. 1:30 PM, 1:30 pm'),
+    ('h:mm:ssA', 'ex. 1:30:00PM, 1:30:00pm'),
+    ('h:mm:ss A', 'ex. 1:30:00 PM, 1:30:00 pm'),
+    ('HH:mm', 'ex. 13:00'),
+    ('HH:mm:ss', 'ex. 13:00:00'),
 ])
 tz_formats = OrderedDict(cull([
-    ('ZZZ', 'ex: MST or US/Central or America/Phoenix') if sys.version_info >= (3,5) else None,
+    ('ZZZ', 'ex. MST or US/Central or America/Phoenix') if sys.version_info >= (3,5) else None,
         # early versions of Arrow do not support natural timezone specifications
-    ('Z', 'ex: 0700 or 0700-'),
+    ('Z', 'ex. 0700 or 0700-'),
     ('local', 'given literally, this represents local timezone'),
 ]))
 
@@ -80,9 +80,9 @@ for index, day in enumerate(days):
 
 # Read command line
 cmdline = docopt(__doc__.format(
-    dates='    ' + '\n    '.join(['%s: %s' % (f, e) for f, e in date_formats.items()]),
-    times='    ' + '\n    '.join(['%s: %s' % (f, e) for f, e in time_formats.items()]),
-    tz='    ' + '\n    '.join(['%s: %s' % (f, e) for f, e in tz_formats.items()]),
+    dates='    ' + '\n    '.join(['%s, %s' % (f, e) for f, e in date_formats.items()]),
+    times='    ' + '\n    '.join(['%s, %s' % (f, e) for f, e in time_formats.items()]),
+    tz='    ' + '\n    '.join(['%s, %s' % (f, e) for f, e in tz_formats.items()]),
 ))
 desired_tz = cmdline['--to']
 if desired_tz and len(desired_tz) == 3:
