@@ -126,15 +126,21 @@ for each in ['local']:
         del tz_formats[each]
 
 # Convert given specification into an Arrow time object
+errmsg = None
 for fmts in product(date_formats.items(), time_formats.items(), tz_formats.items()):
     fmt = ' '.join([f[0] for f in fmts])
     try:
         given = arrow.get(given, fmt)
         break
     except arrow.parser.ParserError as err:
-        pass
+        msg = str(err)
+        if not msg.startswith('Failed to match'):
+            errmsg = msg
 else:
-    fatal('unrecognized specification.', culprit=given)
+    if errmsg:
+        fatal('unrecognized specification (%s).' % errmsg, culprit=given)
+    else:
+        fatal('unrecognized specification.', culprit=given)
 
 # Display out the date and time that was given
 label = Color('yellow', enable=Color.isTTY(sys.stdout))
@@ -152,7 +158,10 @@ if not desired_tz:
 try:
     desired = given.to(desired_tz)
 except arrow.parser.ParserError as err:
-    fatal('unrecognized timezone.', culprit=desired_tz)
+    fatal(
+        'unrecognized timezone (use `tzselect` to find valid name).', 
+        culprit=desired_tz
+    )
 
 # Display out the desired date and time
 display(
