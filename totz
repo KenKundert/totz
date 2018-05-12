@@ -36,32 +36,32 @@ from collections import OrderedDict
 import os, sys
 
 # Define allowed formats
-date_formats = OrderedDict([
-    ('YYYY-M-D', 'ex. 1969-07-20'),
-    ('YYMMDD', 'ex. 690720'),
-    ('YY MMM D', 'ex. 69 Jul 20'),
-    ('YY MMMM D', 'ex. 69 July 20'),
-    ('YYYY MMM D', 'ex. 1969 Jul 20'),
-    ('YYYY MMMM D', 'ex. 1969 July 20'),
-    ('today', 'given literally, this represents today'),
-    ('tomorrow', 'given literally, this represents tomorrow'),
-    ('DOW', 'ex. Mon, represents the next upcoming Monday (cannot be today)'),
-])
-time_formats = OrderedDict([
-    ('hA', 'ex. 1PM or 1pm'),
-    ('h:mmA', 'ex. 1:30PM, 1:30pm'),
-    ('h:mm A', 'ex. 1:30 PM, 1:30 pm'),
-    ('h:mm:ssA', 'ex. 1:30:00PM, 1:30:00pm'),
-    ('h:mm:ss A', 'ex. 1:30:00 PM, 1:30:00 pm'),
-    ('HH:mm', 'ex. 13:00'),
-    ('HH:mm:ss', 'ex. 13:00:00'),
-])
-tz_formats = OrderedDict(cull([
-    ('ZZZ', 'ex. MST or US/Central or America/Phoenix') if sys.version_info >= (3,5) else None,
+date_formats = {
+    'YYYY-M-D': 'ex. 1969-07-20',
+    'YYMMDD': 'ex. 690720',
+    'YY MMM D': 'ex. 69 Jul 20',
+    'YY MMMM D': 'ex. 69 July 20',
+    'YYYY MMM D': 'ex. 1969 Jul 20',
+    'YYYY MMMM D': 'ex. 1969 July 20',
+    'today': 'given literally, this represents today',
+    'tomorrow': 'given literally, this represents tomorrow',
+    'DOW': 'ex. Mon, represents the next upcoming Monday (cannot be today)',
+}
+time_formats = {
+    'hA': 'ex. 1PM or 1pm',
+    'h:mmA': 'ex. 1:30PM, 1:30pm',
+    'h:mm A': 'ex. 1:30 PM, 1:30 pm',
+    'h:mm:ssA': 'ex. 1:30:00PM, 1:30:00pm',
+    'h:mm:ss A': 'ex. 1:30:00 PM, 1:30:00 pm',
+    'HH:mm': 'ex. 13:00',
+    'HH:mm:ss': 'ex. 13:00:00',
+}
+tz_formats = cull({
+    'ZZZ': 'ex. MST or US/Central or America/Phoenix' if sys.version_info >= (3,5) else None,
         # early versions of Arrow do not support natural timezone specifications
-    ('Z', 'ex. 0700 or 0700-'),
-    ('local', 'given literally, this represents local timezone'),
-]))
+    'Z': 'ex. 0700 or 0700-',
+    'local': 'given literally, this represents local timezone',
+})
 
 # Build a dictionary that contains index of each day of week (monday = 0)
 days = [
@@ -88,17 +88,21 @@ desired_tz = cmdline['--to']
 if desired_tz and len(desired_tz) == 3:
     desired_tz = desired_tz.upper()
 
+if 'TOTZ_NOW' in os.environ:
+    # This is used for testing purposes. Use it to override the meaning of now 
+    # so that things like today, tomorrow, and local do not change
+    now = arrow.get(os.environ['TOTZ_NOW'])
+else:
+    now = arrow.now()
+
 # Preprocess given specification to handle special cases
 given = cmdline['<specification>']
 if given[0] == 'today':
-    now = arrow.now()
     given[0] = now.format('YYYY-MM-DD')
 elif given[0] == 'tomorrow':
-    now = arrow.now()
     tomorrow = now.shift(days=+1)
     given[0] = tomorrow.format('YYYY-MM-DD')
 elif given[0].lower() in dow:
-    now = arrow.now()
     current_dow = dow[now.format('ddd').lower()]
     desired_dow = dow[given[0].lower()]
     delta = desired_dow - current_dow
@@ -118,10 +122,10 @@ elif given_tz[-1] in '+-':
 given = ' '.join(given)
 
 # Remove non-Arrow formats
-for each in ['today', 'tomorrow', 'DOW']:
+for each in 'today tomorrow DOW'.split():
     if each in date_formats:
         del date_formats[each]
-for each in ['local']:
+for each in 'local'.split():
     if each in tz_formats:
         del tz_formats[each]
 
@@ -168,5 +172,5 @@ display(
     label('desired:'),
     desired.format('dddd D MMMM YYYY, h:mma ZZ'),
     '(%s),' % desired_tz,
-    full_stop(desired.humanize())
+    full_stop(desired.humanize(now))
 )

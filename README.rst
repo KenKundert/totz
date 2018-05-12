@@ -16,7 +16,7 @@ Examples::
 
     > totz --to est today 4pm local
     given  : Friday 9 December 2016, 4:00pm -08:00 (US/Pacific).
-    desired: Friday 9 December 2016, 7:00pm -05:00 (EST), in 5 hours.
+    desired: Friday 9 December 2016, 7:00pm -05:00 (EST), in 3 hours.
 
     > totz -t America/Chicago mon 9am local
     given  : Monday 12 December 2016, 9:00am -08:00 (US/Pacific).
@@ -86,5 +86,5 @@ Then install with::
 
 Requires Python3.4 or later.
 
-| Released: 2017-02-03
-| Version: 1.1.6
+| Released: 2018-05-11
+| Version: 1.1.7

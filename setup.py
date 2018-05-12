@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='totz',
-    version='1.1.6',
+    version='1.1.7',
     author='Ken Kundert',
     author_email='totz@nurdletech.com',
     description='Convert timezone of a time.',
@@ -12,4 +12,5 @@ setup(
         'docopt',
         'inform>=1.4',
     ],
+    python_requires='>=3.6',
 )
