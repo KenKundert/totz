@@ -26,11 +26,15 @@ You can specify the timezone as a negative offset in two ways. One way is to
 place the sign after the offset to avoid the offset from being confused as an 
 option. The other way is to terminate the option processing by placing '--' 
 before the specification.
+
+You can also give a place name in lieu of the timezone. Only a small number of 
+place names are known. They are:
+{places}
 """
 
 import arrow
 from docopt import docopt
-from inform import fatal, display, Color, full_stop, cull, debug
+from inform import Color, columns, cull, display, fatal, full_stop
 from itertools import product
 from collections import OrderedDict
 import os, sys
@@ -55,13 +59,35 @@ time_formats = {
     'h:mm:ss A': 'ex. 1:30:00 PM, 1:30:00 pm',
     'HH:mm': 'ex. 13:00',
     'HH:mm:ss': 'ex. 13:00:00',
+    'now': 'given literally, this represents the current time',
 }
 tz_formats = cull({
     'ZZZ': 'ex. MST or US/Central or America/Phoenix' if sys.version_info >= (3,5) else None,
         # early versions of Arrow do not support natural timezone specifications
     'Z': 'ex. 0700 or 0700-',
     'local': 'given literally, this represents local timezone',
+    'here': 'given literally, this represents local timezone',
 })
+timezones = {
+    'US/Mountain': 'denver abq soccoro boise',
+    'America/Phoenix': 'phoenix phx',
+    'US/Central': 'austin dallas chicago',
+    'US/Eastern': 'nyc charlotte',
+    'Asia/Shanghai': 'peking beijing shanghai',
+    'Asia/Hong_Kong': 'hongkong',
+    'Asia/Kolkata': 'bangalore',
+}
+places = {p.lower():k for k, v in timezones.items() for p in v.split()}
+def to_timezone(timezone):
+    if not timezone or timezone in 'local here'.split():
+        timezone = os.environ['TZ']
+    elif len(timezone) == 3:
+        timezone = timezone.upper()
+    elif timezone[-1] in '+-':
+        timezone = timezone[-1] + timezone[:-1]
+    timezone = places.get(timezone.lower(), timezone)
+    return timezone
+
 
 # Build a dictionary that contains index of each day of week (monday = 0)
 days = [
@@ -83,8 +109,9 @@ cmdline = docopt(__doc__.format(
     dates='    ' + '\n    '.join(['%s, %s' % (f, e) for f, e in date_formats.items()]),
     times='    ' + '\n    '.join(['%s, %s' % (f, e) for f, e in time_formats.items()]),
     tz='    ' + '\n    '.join(['%s, %s' % (f, e) for f, e in tz_formats.items()]),
+    places = columns(sorted(places.keys())),
 ))
-desired_tz = cmdline['--to']
+desired_tz = to_timezone(cmdline['--to'])
 if desired_tz and len(desired_tz) == 3:
     desired_tz = desired_tz.upper()
 
@@ -97,6 +124,7 @@ else:
 
 # Preprocess given specification to handle special cases
 given = cmdline['<specification>']
+# process date
 if given[0] == 'today':
     given[0] = now.format('YYYY-MM-DD')
 elif given[0] == 'tomorrow':
@@ -110,21 +138,24 @@ elif given[0].lower() in dow:
         delta += 7
     desired = now.shift(days=delta)
     given[0] = desired.format('YYYY-MM-DD')
-given_tz = given[-1]
-if given_tz == 'local':
-    given_tz = os.environ['TZ']
-elif len(given_tz) == 3:
-    given_tz = given_tz.upper()
-    given[-1] = given_tz
-elif given_tz[-1] in '+-':
-    given_tz = given_tz[-1] + given_tz[:-1]
-    given[-1] = given_tz
+
+# process time
+given_time = given[-2]
+if given_time == 'now':
+    given[-2] = now.format('HH:mm')
+
+# process timezone
+given_tz  = to_timezone(given[-1])
+given[-1] = given_tz
 given = ' '.join(given)
 
 # Remove non-Arrow formats
 for each in 'today tomorrow DOW'.split():
     if each in date_formats:
         del date_formats[each]
+for each in 'now'.split():
+    if each in time_formats:
+        del time_formats[each]
 for each in 'local'.split():
     if each in tz_formats:
         del tz_formats[each]
