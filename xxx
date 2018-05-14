@@ -1,0 +1,22 @@
+
+import sys, os
+from inform import error, os_error
+
+class mydict(dict):
+    def __format__(self, template):
+        print('Template:', template)
+        return ', '.join(template.format(v, k=k, v=v) for k, v in self.items())
+
+
+d = mydict(bob='239-8402', ted='371-8567', carol='891-5810', alice='552-2219')
+
+print('Using format():')
+print('Email: {0:{{k}}: {{v}}}'.format(d))
+print()
+print('Using f-string:')
+print(f'Email: {d:{{k}} {{v}}}')
+print()
+print('Using f-string:')
+k=6
+v=9
+print(f'Email: {d:{{k}} {{v}}}')

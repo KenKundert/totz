@@ -69,13 +69,18 @@ tz_formats = cull({
     'here': 'given literally, this represents local timezone',
 })
 timezones = {
+    'US/Pacific': 'sanfrancisco',
     'US/Mountain': 'denver abq soccoro boise',
-    'America/Phoenix': 'phoenix phx',
+    'America/Phoenix': 'phoenix',
     'US/Central': 'austin dallas chicago',
-    'US/Eastern': 'nyc charlotte',
-    'Asia/Shanghai': 'peking beijing shanghai',
+    'US/Eastern': 'nyc newyork charlotte',
+    'Asia/Shanghai': 'china beijing shanghai',
     'Asia/Hong_Kong': 'hongkong',
-    'Asia/Kolkata': 'bangalore',
+    'Asia/Kolkata': 'india bangalore',
+    'Europe/London': 'uk london',
+    'Europe/Paris': 'france paris',
+    'Europe/Berlin': 'germany berlin munich',
+    'Europe/Rome': 'italy rome',
 }
 places = {p.lower():k for k, v in timezones.items() for p in v.split()}
 def to_timezone(timezone):
@@ -156,7 +161,7 @@ for each in 'today tomorrow DOW'.split():
 for each in 'now'.split():
     if each in time_formats:
         del time_formats[each]
-for each in 'local'.split():
+for each in 'local here'.split():
     if each in tz_formats:
         del tz_formats[each]
 
