@@ -129,14 +129,18 @@ else:
 
 # Preprocess given specification to handle special cases
 given = cmdline['<specification>']
+
+# process timezone
+given_tz  = given[-1] = to_timezone(given[-1])
+
 # process date
 if given[0] == 'today':
-    given[0] = now.format('YYYY-MM-DD')
+    given[0] = now.to(given_tz).format('YYYY-MM-DD')
 elif given[0] == 'tomorrow':
     tomorrow = now.shift(days=+1)
-    given[0] = tomorrow.format('YYYY-MM-DD')
+    given[0] = tomorrow.to(given_tz).format('YYYY-MM-DD')
 elif given[0].lower() in dow:
-    current_dow = dow[now.format('ddd').lower()]
+    current_dow = dow[now.to(given_tz).format('ddd').lower()]
     desired_dow = dow[given[0].lower()]
     delta = desired_dow - current_dow
     if delta <= 0:
@@ -147,11 +151,8 @@ elif given[0].lower() in dow:
 # process time
 given_time = given[-2]
 if given_time == 'now':
-    given[-2] = now.format('HH:mm')
+    given_time = given[-2] = now.to(given_tz).format('HH:mm')
 
-# process timezone
-given_tz  = to_timezone(given[-1])
-given[-1] = given_tz
 given = ' '.join(given)
 
 # Remove non-Arrow formats
