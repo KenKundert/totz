@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='totz',
-    version='1.2.0',
+    version='1.2.1',
     author='Ken Kundert',
     author_email='totz@nurdletech.com',
     description='Convert timezone of a time.',
