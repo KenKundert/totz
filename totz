@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+# Description {{{1
 """
 Convert Timezones
 
@@ -22,192 +22,216 @@ You can specify the time with the following formats:
 You can specify the timezone with the following formats:
 {tz}
 
-You can specify the timezone as a negative offset in two ways. One way is to 
-place the sign after the offset to avoid the offset from being confused as an 
-option. The other way is to terminate the option processing by placing '--' 
-before the specification.
-
-You can also give a place name in lieu of the timezone. Only a small number of 
+You can also give a place name in lieu of the timezone. Only a small number of
 place names are known. They are:
 {places}
 """
 
+# Imports {{{1
+import os
+import sys
+from itertools import product
+
 import arrow
 from docopt import docopt
-from inform import Color, columns, cull, display, fatal, full_stop
-from itertools import product
-from collections import OrderedDict
-import os, sys
 
+from inform import Color, columns, cull, display, fatal, full_stop
+
+# Globals {{{1
 # Define allowed formats
 date_formats = {
-    'YYYY-M-D': 'ex. 1969-07-20',
-    'YYMMDD': 'ex. 690720',
-    'YY MMM D': 'ex. 69 Jul 20',
-    'YY MMMM D': 'ex. 69 July 20',
-    'YYYY MMM D': 'ex. 1969 Jul 20',
-    'YYYY MMMM D': 'ex. 1969 July 20',
-    'today': 'given literally, this represents today',
-    'tomorrow': 'given literally, this represents tomorrow',
-    'DOW': 'ex. Mon, represents the next upcoming Monday (cannot be today)',
+    "YYYY-M-D": "ex. 1969-07-20",
+    "YYMMDD": "ex. 690720",
+    "YY MMM D": "ex. 69 Jul 20",
+    "YY MMMM D": "ex. 69 July 20",
+    "YYYY MMM D": "ex. 1969 Jul 20",
+    "YYYY MMMM D": "ex. 1969 July 20",
+    "D MMMM YYYY ": "ex. 20 July 1969",
+    "today": "given literally, this represents today",
+    "tomorrow": "given literally, this represents tomorrow",
+    "DOW": "ex. Mon, represents the next upcoming Monday (cannot be today)",
 }
 time_formats = {
-    'hA': 'ex. 1PM or 1pm',
-    'h:mmA': 'ex. 1:30PM, 1:30pm',
-    'h:mm A': 'ex. 1:30 PM, 1:30 pm',
-    'h:mm:ssA': 'ex. 1:30:00PM, 1:30:00pm',
-    'h:mm:ss A': 'ex. 1:30:00 PM, 1:30:00 pm',
-    'HH:mm': 'ex. 13:00',
-    'HH:mm:ss': 'ex. 13:00:00',
-    'now': 'given literally, this represents the current time',
+    "h:mm:ss A": "ex. 1:30:00 PM, 1:30:00 pm",
+    "h:mm:ssA": "ex. 1:30:00PM, 1:30:00pm",
+    "h:mm A": "ex. 1:30 PM, 1:30 pm",
+    "h:mmA": "ex. 1:30PM, 1:30pm",
+    "hA": "ex. 1PM or 1pm",
+    "HH:mm:ss": "ex. 13:00:00",
+    "HH:mm": "ex. 13:00",
+    "now": "given literally, this represents the current time",
 }
-tz_formats = cull({
-    'ZZZ': 'ex. MST or US/Central or America/Phoenix' if sys.version_info >= (3,5) else None,
+tz_formats = cull(
+    {
+        "ZZZ": "ex. MST or US/Central or America/Phoenix"
+        if sys.version_info >= (3, 5)
+        else None,
         # early versions of Arrow do not support natural timezone specifications
-    'Z': 'ex. 0700 or 0700-',
-    'local': 'given literally, this represents local timezone',
-    'here': 'given literally, this represents local timezone',
-})
+        "Z": "ex. 0700 or 0700-",
+        "local": "given literally, this represents local timezone",
+        "here": "given literally, this represents local timezone",
+    }
+)
 timezones = {
-    'US/Pacific': 'sanfrancisco',
-    'US/Mountain': 'denver abq soccoro boise',
-    'America/Phoenix': 'phoenix',
-    'US/Central': 'austin dallas chicago',
-    'US/Eastern': 'nyc newyork charlotte',
-    'Asia/Shanghai': 'china beijing shanghai',
-    'Asia/Hong_Kong': 'hongkong',
-    'Asia/Kolkata': 'india bangalore',
-    'Europe/London': 'uk london',
-    'Europe/Paris': 'france paris',
-    'Europe/Berlin': 'germany berlin munich',
-    'Europe/Rome': 'italy rome',
+    "US/Pacific": "sanfrancisco",
+    "US/Mountain": "denver abq soccoro boise",
+    "America/Phoenix": "phoenix",
+    "US/Central": "austin dallas chicago",
+    "US/Eastern": "boston nyc newyork charlotte",
+    "Asia/Shanghai": "china beijing shanghai",
+    "Asia/Hong_Kong": "hongkong",
+    "Asia/Kolkata": "india bangalore",
+    "Europe/London": "uk london",
+    "Europe/Paris": "france paris",
+    "Europe/Berlin": "germany berlin munich",
+    "Europe/Rome": "italy rome",
 }
-places = {p.lower():k for k, v in timezones.items() for p in v.split()}
-def to_timezone(timezone):
-    if not timezone or timezone in 'local here'.split():
-        timezone = os.environ['TZ']
-    elif len(timezone) == 3:
-        timezone = timezone.upper()
-    elif timezone[-1] in '+-':
-        timezone = timezone[-1] + timezone[:-1]
-    timezone = places.get(timezone.lower(), timezone)
-    return timezone
-
+places = {p.lower(): k for k, v in timezones.items() for p in v.split()}
 
 # Build a dictionary that contains index of each day of week (monday = 0)
 days = [
-    'mon monday',
-    'tue tuesday',
-    'wed wednesday',
-    'thu thurs thursday',
-    'fri friday',
-    'sat saturday',
-    'sun sunday'
+    "mon monday",
+    "tue tuesday",
+    "wed wednesday",
+    "thu thurs thursday",
+    "fri friday",
+    "sat saturday",
+    "sun sunday",
 ]
 dow = {}
 for index, day in enumerate(days):
     for each in day.split():
         dow[each] = index
 
+# Utilities {{{1
+def to_timezone(timezone):
+    if not timezone:
+        return timezone
+    if len(timezone) == 8 and ("+" in timezone or "-" in timezone):
+        # handle cases like: PST-0800, strip off leading PST
+        sign = "+" if "+" in timezone else "-"
+        code, sign, offset = timezone.partition(sign)
+        try:
+            timezone = sign + offset
+        except ValueError:
+            pass
+    if not timezone or timezone in "local here".split():
+        timezone = os.environ["TZ"]
+    elif len(timezone) == 3:
+        timezone = timezone.upper()
+    elif timezone[-1] in "+-":
+        # this allows the - to be at the end, this is no longer necessary
+        timezone = timezone[-1] + timezone[:-1]
+    timezone = places.get(timezone.lower(), timezone)
+    return timezone
+
+
+
+# Main {{{1
 # Read command line
-cmdline = docopt(__doc__.format(
-    dates='    ' + '\n    '.join(['%s, %s' % (f, e) for f, e in date_formats.items()]),
-    times='    ' + '\n    '.join(['%s, %s' % (f, e) for f, e in time_formats.items()]),
-    tz='    ' + '\n    '.join(['%s, %s' % (f, e) for f, e in tz_formats.items()]),
-    places = columns(sorted(places.keys())),
-))
-desired_tz = to_timezone(cmdline['--to'])
+cmdline = docopt(
+    __doc__.format(
+        dates="    "
+        + "\n    ".join(["%s, %s" % (f, e) for f, e in date_formats.items()]),
+        times="    "
+        + "\n    ".join(["%s, %s" % (f, e) for f, e in time_formats.items()]),
+        tz="    " + "\n    ".join(["%s, %s" % (f, e) for f, e in tz_formats.items()]),
+        places=columns(sorted(places.keys())),
+    ),
+    options_first=True,
+)
+desired_tz = to_timezone(cmdline["--to"])
 if desired_tz and len(desired_tz) == 3:
     desired_tz = desired_tz.upper()
 
-if 'TOTZ_NOW' in os.environ:
-    # This is used for testing purposes. Use it to override the meaning of now 
+if "TOTZ_NOW" in os.environ:
+    # This is used for testing purposes. Use it to override the meaning of now
     # so that things like today, tomorrow, and local do not change
-    now = arrow.get(os.environ['TOTZ_NOW'])
+    now = arrow.get(os.environ["TOTZ_NOW"])
 else:
     now = arrow.now()
 
 # Preprocess given specification to handle special cases
-given = cmdline['<specification>']
+given = cmdline["<specification>"]
+
+if len(given) <= 2:
+    fatal("too few arguments, expected at least 3 (date, time & timezone).")
 
 # process timezone
-given_tz  = given[-1] = to_timezone(given[-1])
+given_tz = given[-1] = to_timezone(given[-1])
 
 # process date
-if given[0] == 'today':
-    given[0] = now.to(given_tz).format('YYYY-MM-DD')
-elif given[0] == 'tomorrow':
+if given[0] == "today":
+    given[0] = now.to(given_tz).format("YYYY-MM-DD")
+elif given[0] == "tomorrow":
     tomorrow = now.shift(days=+1)
-    given[0] = tomorrow.to(given_tz).format('YYYY-MM-DD')
+    given[0] = tomorrow.to(given_tz).format("YYYY-MM-DD")
 elif given[0].lower() in dow:
-    current_dow = dow[now.to(given_tz).format('ddd').lower()]
+    current_dow = dow[now.to(given_tz).format("ddd").lower()]
     desired_dow = dow[given[0].lower()]
     delta = desired_dow - current_dow
     if delta <= 0:
         delta += 7
     desired = now.shift(days=delta)
-    given[0] = desired.format('YYYY-MM-DD')
+    given[0] = desired.format("YYYY-MM-DD")
 
 # process time
 given_time = given[-2]
-if given_time == 'now':
-    given_time = given[-2] = now.to(given_tz).format('HH:mm')
+if given_time == "now":
+    given_time = given[-2] = now.to(given_tz).format("HH:mm")
 
-given = ' '.join(given)
+given = " ".join(given).replace(",", " ")
 
 # Remove non-Arrow formats
-for each in 'today tomorrow DOW'.split():
+for each in "today tomorrow DOW".split():
     if each in date_formats:
         del date_formats[each]
-for each in 'now'.split():
+for each in "now".split():
     if each in time_formats:
         del time_formats[each]
-for each in 'local here'.split():
+for each in "local here".split():
     if each in tz_formats:
         del tz_formats[each]
 
 # Convert given specification into an Arrow time object
 errmsg = None
 for fmts in product(date_formats.items(), time_formats.items(), tz_formats.items()):
-    fmt = ' '.join([f[0] for f in fmts])
+    fmt = " ".join([f[0] for f in fmts])
     try:
         given = arrow.get(given, fmt)
         break
-    except arrow.parser.ParserError as err:
-        msg = str(err)
-        if not msg.startswith('Failed to match'):
+    except arrow.parser.ParserError as e:
+        msg = str(e)
+        if not msg.startswith("Failed to match"):
             errmsg = msg
 else:
     if errmsg:
-        fatal('unrecognized specification (%s).' % errmsg, culprit=given)
+        fatal("unrecognized specification (%s)." % errmsg, culprit=given)
     else:
-        fatal('unrecognized specification.', culprit=given)
+        fatal("unrecognized specification.", culprit=given)
 
 # Display out the date and time that was given
-label = Color('yellow', enable=Color.isTTY(sys.stdout))
+label = Color("yellow", enable=Color.isTTY(sys.stdout))
 display(
-    label('given  :'),
-    given.format('dddd D MMMM YYYY, h:mma ZZ'),
-    '(%s).' % (given_tz)
+    label("given  :"), given.format("dddd D MMMM YYYY, h:mma ZZ"), "(%s)." % (given_tz)
 )
 
 # Convert the timezone
 if not desired_tz:
-    desired_tz = os.environ['TZ']
+    desired_tz = os.environ["TZ"]
     if not desired_tz:
-        desired_tz = 'local'
+        desired_tz = "local"
 try:
     desired = given.to(desired_tz)
-except arrow.parser.ParserError as err:
+except arrow.parser.ParserError:
     fatal(
-        'unrecognized timezone (use `tzselect` to find valid name).', 
-        culprit=desired_tz
+        "unrecognized timezone (use `tzselect` to find valid name).", culprit=desired_tz
     )
 
 # Display out the desired date and time
 display(
-    label('desired:'),
-    desired.format('dddd D MMMM YYYY, h:mma ZZ'),
-    '(%s),' % desired_tz,
-    full_stop(desired.humanize(now))
+    label("desired:"),
+    desired.format("dddd D MMMM YYYY, h:mma ZZ"),
+    "(%s)," % desired_tz,
+    full_stop(desired.humanize(now)),
 )
