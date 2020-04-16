@@ -5,7 +5,7 @@ with open("README.rst", encoding="utf-8") as file:
 
 setup(
     name='totz',
-    version='1.2.1',
+    version='1.3.0',
     author='Ken Kundert',
     author_email='totz@nurdletech.com',
     description='Convert timezone of a time.',
