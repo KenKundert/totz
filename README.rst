@@ -1,6 +1,10 @@
 Convert Date and Time to New Timezone
 =====================================
 
+:Author: Ken Kundert
+:Version: 1.3.0
+:Released: 2020-04-16
+
 A simple command-line utility for converting a date and time to a new 
 timezone.
 
