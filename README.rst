@@ -2,8 +2,8 @@ Convert Date and Time to New Timezone
 =====================================
 
 :Author: Ken Kundert
-:Version: 1.3.0
-:Released: 2020-04-16
+:Version: 1.3.1
+:Released: 2020-05-15
 
 A simple command-line utility for converting a date and time to a new 
 timezone.
@@ -90,5 +90,5 @@ Then install with::
 
 Requires Python3.4 or later.
 
-| Released: 2020-04-16
-| Version: 1.3.0
+| Released: 2020-05-15
+| Version: 1.3.1
