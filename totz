@@ -6,7 +6,7 @@ Convert Timezones
 Converts a date and time to another timezone.
 
 Usage:
-   mytz [options] [--] <specification>...
+   totz [options] [--] <specification>...
 
 Options:
    -t TZ, --to TZ   Convert to specified timezone.
@@ -94,7 +94,7 @@ timezones = {
     "-0900": "hdt akst",  # hawaii daylight time, alaska standard time
     "-0800": "hdt akdt",  # alaska daylight time
 }
-places = {p.lower(): k.lower() for k, v in timezones.items() for p in v.split()}
+places = {p.lower(): k for k, v in timezones.items() for p in v.split()}
 
 # Build a dictionary that contains index of each day of week (monday = 0)
 days = [
