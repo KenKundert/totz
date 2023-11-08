@@ -15,7 +15,7 @@ setup(
     scripts = ['totz'],
     install_requires = [
         'docopt',
-        'inform>=1.4',
+        'inform',
     ],
     python_requires = '>=3.6',
     zip_safe = True,
